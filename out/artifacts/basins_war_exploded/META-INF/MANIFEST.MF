@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Created-By: IntelliJ IDEA
+Built-By: Yuan
+Build-Jdk: Oracle OpenJDK version 1.8.0_301
+Implementation-Title: basins
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: nnu.ogms
+Main-Class: ${start-class}
+

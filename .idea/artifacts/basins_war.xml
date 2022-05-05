@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="basins:war">
+    <output-path>$PROJECT_DIR$/back/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>basins</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="basins-0.0.1-SNAPSHOT.war">
+      <element id="artifact" artifact-name="basins:war exploded" />
+    </root>
+  </artifact>
+</component>
