@@ -1,16 +1,36 @@
 <!--
  * @Author: your name
  * @Date: 2022-04-28 13:53:55
- * @LastEditTime: 2022-05-04 16:12:16
+ * @LastEditTime: 2022-05-06 20:32:05
  * @LastEditors: Please set LastEditors
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \WebBasin\front\src\components\seimscontrol\CreateModel.vue
 -->
 <template>
-  <Modal v-model="createModelShowTemp" draggable scrollable :mask="false" title="SEIMS 建模">
+  <Modal v-model="createModelShowTemp" draggable scrollable :mask="false" title="SEIMS 建模" width="550px">
     <div>
-    <!--1、流域划分-->
       <Tabs type="card" :animated="false" >
+        <!--0、工程项目-->
+        <TabPane label="工程管理">
+          <div>
+            <Divider orientation="left">新建工程</Divider>
+            <div class="selectFlex">
+              <Form :model="formProjectItem" :label-width="80" :rules="ruleProject" ref="formProjectItem" inline>
+                <FormItem label="项目名称" prop='projectName'>
+                  <Input v-model="formProjectItem.projectName" placeholder="请输入项目名称" clearable style="width: 220px"></Input>
+                  <Button @click="handleSubmitProject('formProjectItem')">确定</Button>
+                </FormItem>
+                <!-- <FormItem>
+                  <Button @click="handleSubmitProject('formProjectItem')">确定</Button>
+                </FormItem> -->
+              </Form>
+            </div>
+            <div class="finishBtn">
+              <Button>下一步</Button>
+            </div>
+          </div>
+        </TabPane>   
+        <!--1、流域划分-->
         <TabPane label="流域划分">
           <div>
               <Divider orientation="left">建模流域范围</Divider>
@@ -23,10 +43,25 @@
               </div>
               <Divider orientation="left">生成河网</Divider>
               <div style="margin:0 34px">
-                <span>输入生成河网阈值： </span>
-                <InputNumber :min="0" v-model="streamValue" style="width: 50px"></InputNumber>
-                <span>（单位：cell）</span>
-                <Button>计算河网</Button>
+                <Form id="streamValueForm" :model="formStreamNetworkValue" :label-width="180" :rules="ruleStreamNetwork" ref="formStreamNetworkValue" inline>  
+                  <FormItem  label="输入生成河网阈值：" prop='streamValueCell'>
+                    <!-- <InputNumber :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 50px"></InputNumber> -->
+                    <Input :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 100px" @on-change="convertCellArea('cell')"></Input>
+                    <!-- <Input :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 100px" ></Input> -->
+                    <span>（单位：cell）</span>
+                  </FormItem>
+                  <FormItem prop='streamValueArea'>
+                    <Input :min="0" v-model="formStreamNetworkValue.streamValueArea" style="width: 100px" @on-change="convertCellArea('area')"></Input>
+                    <span>（单位：km<sup>2</sup>）</span>
+                  </FormItem>
+                  <Button @click="handleSubmitProject('formStreamNetworkValue')">确定</Button>
+                    <!-- <span>输入生成河网阈值： </span>
+                    <InputNumber :min="0" v-model="streamValueCell" style="width: 50px"></InputNumber>
+                    <span>（单位：cell）</span>
+                    <Input  :min="0" v-model="streamValueArea" style="width: 50px"></Input>
+                    <span>（单位：km<sup>2</sup>）</span>
+                    <Button>计算河网</Button> -->
+                </Form>
               </div>
 
               <Divider orientation="left">流域出口设置</Divider>
@@ -172,7 +207,7 @@
         <TabPane label="水文观测">
           <Divider orientation="left">水文观测数据</Divider>
           <span>观测数据类型：</span>
-          <Tag v-for="item in obsDataTypeSelect" :key="item" :name="item" closable @on-close="handleClose2">{{ item }}</Tag>    
+          <Tag v-for="item in obsDataTypeSelect" :key="item" :name="item" closable @on-close="handleCloseObs">{{ item }}</Tag>    
           <CheckboxGroup v-model="obsDataResource" style="margin:5px 0px 5px 10px">
             <Checkbox label="obsFromSystem">
                 <span>观测数据选择：</span>
@@ -227,9 +262,61 @@ export default {
     immediate: true
   },
   data() {
+      const validateProjectName = (rule, value, callback) =>{
+        if (value) {
+          if (!value.match(/^[\u4E00-\u9FA5A-Za-z0-9_]+?$/)) {
+            callback(new Error('不可输入特殊字符'))
+          } else if(value.length>16){
+            callback(new Error('项目名称字符应少于16位'))
+          }else{
+              callback()
+          }
+        }
+      };
+      const validateStreamValueCell = (rule, value, callback) =>{
+        if (!value.match(/^\+?[1-9][0-9]*$/)) {
+            callback(new Error('应输入非零正整数'))
+          }else{
+            callback()
+          }
+      };
+      const validateStreamValueArea = (rule, value, callback) =>{
+        // if (!value.match(/^[0-9]+(\.[0-9]{1,6})?$/)) {
+        if (!value.match(/^(([1-9]\d{0,6})|0)(\.\d{0,5})?$/)) {
+            callback(new Error('阈值应大于零,且有最多5位小数'))
+          }else{
+            callback()
+          }
+      };
       return {
         createModelShowTemp:false,
-        streamValue:35,
+        formProjectItem:{
+          projectName:'',
+        },
+        ruleProject:{
+          projectName:[
+            { required: true, message: '项目名称不能为空', trigger: 'change' },
+            {type: 'string',validator: validateProjectName, trigger: 'change'}
+          ]
+        },
+        ///////
+        DEMDataSize:90,
+        formStreamNetworkValue:{
+          streamValueArea:'1.62',
+          streamValueCell:'200',
+        },
+        ruleStreamNetwork:{
+          streamValueCell:[
+            { required: true, message: '河网阈值不能为空', trigger: 'blur' },
+            // {type:'number',pattern:/^\+?[1-9][0-9]*$/,message:'应输入非零正整数', trigger: 'blur',} //transform(value) {return Number(value);}
+            {type:'number', validator:validateStreamValueCell, trigger: 'blur',}
+          ],
+          streamValueArea:[
+            { required: true, message: '河网阈值不能为空', trigger: 'blur' },
+            // {type:'number', pattern:/^[0-9]+(\.[0-9]{1,3})?$/,message:'阈值应大于零', trigger: 'blur' }
+            {type:'number', validator:validateStreamValueArea, trigger: 'blur',} 
+          ]
+        },
         ////////
         soilMapList:[
           {
@@ -295,7 +382,54 @@ export default {
       }
   },
   methods: {
-    handleClose2 (event, name) {
+    handleSubmitProject (name) {
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          this.$Message.success('Success!');
+        } else {
+          this.$Message.error('Fail!');
+        }
+      })
+    },
+    transformDecimal(number, i) {
+      let decimalNum = null;
+      // 先转换为数值型
+      let num = Number(number);
+      // 判断是否为数值型
+      if(!isNaN(num)) {
+          // 切分整数与小数
+          let arr = num.toString().split(".");
+          // 是小数且小数位大于保留个数
+          if(arr.length > 1 && arr[1].length > i) {            
+              // 小数部分字符串
+              let decimal = arr[1].slice(i, i+1);
+              // toFixed 有 bug，四舍六入五随机
+              // 当四舍五入的数为 5，给其 + 1
+              if(decimal === '5') {
+                  // 这里可能会存在 0.1 ** 5 = 0.000010000000000000003 但不影响四舍五入
+                  num += Math.pow(0.1, i+1);
+              }
+              decimalNum = num.toFixed(i);        
+          }
+          else {
+              decimalNum = num;
+          }
+          decimalNum = Number(decimalNum);
+    }     
+    return String(decimalNum);
+    },
+    convertCellArea(type){
+      var streamValueArea = this.formStreamNetworkValue.streamValueArea;
+      var streamValueCell = this.formStreamNetworkValue.streamValueCell;
+      if (type=='cell') {
+        var valueAreaTmp = streamValueCell * Math.pow(this.DEMDataSize,2) *0.000001
+        this.formStreamNetworkValue.streamValueArea = this.transformDecimal(valueAreaTmp, 4)  
+      } else if (type=='area') {
+        var valueCellTmp = (streamValueArea*1000000)/Math.pow(this.DEMDataSize,2);
+        this.formStreamNetworkValue.streamValueCell = this.transformDecimal(valueCellTmp,0)
+      }
+    },
+    handleCloseObs (event, name) {
       const index = this.obsDataTypeSelect.indexOf(name);
       this.obsDataTypeSelect.splice(index, 1);
     },
@@ -359,6 +493,10 @@ export default {
     display: flex;
     justify-content: flex-end ;
     margin-top: 7px;
+  }
+  
+   #streamValueForm .ivu-form-item {
+    margin-bottom: 5px;
   }
 
 </style>
