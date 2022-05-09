@@ -2,6 +2,7 @@ package nnu.ogms.basins.Controller;
 
 import nnu.ogms.basins.Service.BasinsScopeService;
 import nnu.ogms.basins.Service.UpstreamBasinService;
+import nnu.ogms.basins.common.ResponseMessage;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class BasinsScopeController {
     @RequestMapping(value = "/queryScope",produces = {"application/json;charset=UTF-8"},method = RequestMethod.GET)
     public Object queryScope(@RequestParam("lon") double lon, @RequestParam("lat") double lat){
         BasinsScopeService scopeService = new BasinsScopeService(mongoTemplate);
-        return scopeService.queryScopeByLoc(lon, lat);
+        return ResponseMessage.success(scopeService.queryScopeByLoc(lon, lat));
     }
 
     @RequestMapping(value = "/querySubLevel/{level}",produces = {"application/json;charset=UTF-8"},method = RequestMethod.GET)

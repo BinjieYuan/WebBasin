@@ -2,8 +2,11 @@ package nnu.ogms.basins.Service;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import lombok.extern.slf4j.Slf4j;
 import nnu.ogms.basins.Entity.BasinsScopeEntity;
 import nnu.ogms.basins.Entity.SubBasinsScopeEntity;
+import nnu.ogms.basins.common.ErrorEnum;
+import nnu.ogms.basins.common.GeneralException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -11,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class BasinsScopeService {
     private final MongoTemplate mongoTemplate;
 
@@ -20,6 +24,14 @@ public class BasinsScopeService {
     }
 
     public Object queryScopeByLoc(double lon, double lat){
+        // 从前端拿到值以后，一般要先进行数据正确性的校验
+        // 经度范围是0-180°，纬度范围是0-90°
+        if (lon < 0.0 || lon > 180.0){
+            throw new GeneralException(ErrorEnum.LONGITUDE_SCOPE_ERROR);
+        }
+        if (lat < 0.0 || lat > 90.0){
+            throw new GeneralException(ErrorEnum.LATITUDE_SCOPE_ERROR);
+        }
         try {
             double[] point = new double[]{lon, lat};
 
@@ -32,7 +44,10 @@ public class BasinsScopeService {
             return mongoTemplate.findOne(query, BasinsScopeEntity.class);
 
         }catch (Exception e){
-            return 0;
+            // 1. 出错时一般要对异常信息进行描述，并抛给前端
+            log.error("****时报错:",e);
+            throw new GeneralException(ErrorEnum.QUERY_SCOPE_ERROR,"****出错，请检查****");
+//            return 0;
         }
     }
 
