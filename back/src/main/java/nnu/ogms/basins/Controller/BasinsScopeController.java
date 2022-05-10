@@ -2,6 +2,8 @@ package nnu.ogms.basins.Controller;
 
 import nnu.ogms.basins.Service.BasinsScopeService;
 import nnu.ogms.basins.Service.UpstreamBasinService;
+import nnu.ogms.basins.common.ErrorEnum;
+import nnu.ogms.basins.common.GeneralException;
 import nnu.ogms.basins.common.ResponseMessage;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -34,4 +36,15 @@ public class BasinsScopeController {
         UpstreamBasinService upstreamBasinService = new UpstreamBasinService(mongoTemplate);
         return upstreamBasinService.queryUpstreamBasinByLoc(level, lon, lat, dir, upa, elv,timeStamp);
     }
+
+    @GetMapping("/test")
+    public ResponseMessage responseTest(@RequestParam int num){
+        if (num < 0) {
+            throw new GeneralException(ErrorEnum.QUERY_SCOPE_ERROR);
+        }else {
+            return ResponseMessage.success("your data");
+        }
+    }
+
+    // 看了彬杰的后端代码，写了几个公共类，对代码规范性提了几点建议
 }

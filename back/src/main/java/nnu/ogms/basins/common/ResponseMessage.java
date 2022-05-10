@@ -7,6 +7,8 @@ public class ResponseMessage<T> {
 
     private Integer errCode;
 
+    private Integer code;
+
     private String errMsg;
 
     private T data;
@@ -15,10 +17,11 @@ public class ResponseMessage<T> {
 
     }
 
-    public ResponseMessage(Integer errCode, String errMsg, T data) {
+    public ResponseMessage(Integer errCode, String errMsg, Integer code, T data) {
         this.errCode = errCode;
         this.errMsg = errMsg;
         this.data = data;
+        this.code = code;
     }
 
     public static ResponseMessage success(Object object, String message){
@@ -62,5 +65,13 @@ public class ResponseMessage<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public Integer getCode() {
+        return code;
+    }
+
+    public void setCode(Integer code) {
+        this.code = code;
     }
 }
