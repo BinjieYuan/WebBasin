@@ -1,8 +1,8 @@
 <!--
  * @Author: your name
  * @Date: 2021-12-28 16:13:00
- * @LastEditTime: 2022-04-30 10:15:01
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2022-05-08 22:40:18
+ * @LastEditors: BinjieYuan yuanbj9035@163.com
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \flaskVueSEIMS\client\src\components\MainLayer.vue
 -->
@@ -66,6 +66,7 @@
                     <MapView></MapView>
                     <basin-show :basinShow.sync="basinShow"></basin-show>
                     <create-model :createModelShow.sync="createModelShow"></create-model>
+                        <GeoDataShowControl></GeoDataShowControl>  
                 </Content>
             </Layout>
         </Layout>
@@ -77,8 +78,9 @@
 import MapView from '../MapView.vue'
 import BasinShow from '../mapcontrol/BasinShow.vue'
 import CreateModel from '../seimscontrol/CreateModel.vue'
+import GeoDataShowControl from '../mapcontrol/GeoDataShowControl.vue'
     export default {
-        components:{MapView, BasinShow, CreateModel, },
+        components:{MapView, BasinShow, CreateModel, GeoDataShowControl},
         data(){
             return {
                 active: "/basinshow",

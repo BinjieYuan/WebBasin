@@ -1,8 +1,8 @@
 <!--
  * @Author: your name
  * @Date: 2022-04-28 13:53:55
- * @LastEditTime: 2022-05-06 20:32:05
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2022-05-14 17:05:07
+ * @LastEditors: BinjieYuan yuanbj9035@163.com
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \WebBasin\front\src\components\seimscontrol\CreateModel.vue
 -->
@@ -35,45 +35,84 @@
           <div>
               <Divider orientation="left">建模流域范围</Divider>
               <!-- <h3>建模流域范围</h3> -->
-              <div class="selectFlex">
-                <Button>选择流域范围</Button>
-                <Upload action="" class="upload">
-                  <Button icon="ios-cloud-upload-outline">上传DEM数据</Button>
-                </Upload>
+              <div>
+                <RadioGroup v-model="basinScopeType" style="margin:5px 0px 5px 28px" @on-change="changeBasinScopeDataResource">
+                  <Radio label="basinScopeFromSystem">
+                    <span>在系统划分的流域图层中选择</span>
+                  </Radio>
+                  <Radio label="basinScopeFromLocal" style="padding-left:70px">
+                    <span>使用本地上传的DEM数据</span>
+                  </Radio>
+                </RadioGroup><br>
               </div>
+              <div class="selectFlex">
+                <div>
+                  <div style="margin:4px 0">
+                    <Checkbox v-model="basinCkb" @on-change="showBasinsLayer" 
+                      :disabled="basinScopeType!=='basinScopeFromSystem'">
+                        显示流域图层
+                    </Checkbox>
+                    <Select v-model="levelSelect" size="small" style="width:90px"
+                      :disabled="!basinCkb"
+                      @on-change="changeStandardBasinsLevel">
+                        <Option v-for="item in levelLayerList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+                    </Select>
+                  </div>
+                  <span>开启流域选择</span>
+                  <i-switch v-model="querySwitch" :disabled="!basinCkb">
+                    <Icon slot="open" type="md-pin" size="14"></Icon>
+                    <Icon slot="close" type="md-close" size="14"></Icon>
+                  </i-switch>
+                </div>
+                <div>
+                  <Upload action="" class="upload" >
+                    <Button icon="ios-cloud-upload-outline" :disabled="basinScopeType=='basinScopeFromSystem'">上传DEM数据</Button>
+                  </Upload>
+                </div>
+              </div>
+
               <Divider orientation="left">生成河网</Divider>
               <div style="margin:0 34px">
-                <Form id="streamValueForm" :model="formStreamNetworkValue" :label-width="180" :rules="ruleStreamNetwork" ref="formStreamNetworkValue" inline>  
-                  <FormItem  label="输入生成河网阈值：" prop='streamValueCell'>
+                <Form id="streamValueForm" :model="formStreamNetworkValue" :label-width="0" :rules="ruleStreamNetwork" ref="formStreamNetworkValue" inline>  
+                  <span>输入生成河网阈值：</span><br>
+                  <FormItem  prop='streamValueCell'>
                     <!-- <InputNumber :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 50px"></InputNumber> -->
-                    <Input :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 100px" @on-change="convertCellArea('cell')"></Input>
+                    <Input :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 90px" @on-change="convertCellArea('cell')"></Input>
                     <!-- <Input :min="0" v-model="formStreamNetworkValue.streamValueCell" style="width: 100px" ></Input> -->
                     <span>（单位：cell）</span>
                   </FormItem>
                   <FormItem prop='streamValueArea'>
-                    <Input :min="0" v-model="formStreamNetworkValue.streamValueArea" style="width: 100px" @on-change="convertCellArea('area')"></Input>
+                    <Input :min="0" v-model="formStreamNetworkValue.streamValueArea" style="width: 90px" @on-change="convertCellArea('area')"></Input>
                     <span>（单位：km<sup>2</sup>）</span>
+                    <Button  @click="handleSubmitProject('formStreamNetworkValue')" style="margin-left:3px">确定</Button>
                   </FormItem>
-                  <Button @click="handleSubmitProject('formStreamNetworkValue')">确定</Button>
-                    <!-- <span>输入生成河网阈值： </span>
-                    <InputNumber :min="0" v-model="streamValueCell" style="width: 50px"></InputNumber>
-                    <span>（单位：cell）</span>
-                    <Input  :min="0" v-model="streamValueArea" style="width: 50px"></Input>
-                    <span>（单位：km<sup>2</sup>）</span>
-                    <Button>计算河网</Button> -->
+                
                 </Form>
               </div>
 
               <Divider orientation="left">流域出口设置</Divider>
+              <div>
+                <RadioGroup v-model="outletType" style="margin:5px 0px 5px 28px" >
+                  <Radio label="outletFromLocal">
+                    <span>使用本地上传的outlet数据</span>
+                  </Radio>
+                  <Radio label="outletFromMapDraw" style="padding-left:70px">
+                    <span>使用绘图工具在页面上绘制</span>
+                  </Radio>
+                </RadioGroup><br>
+              </div>
               <div class="selectFlex">
                   <div>
-                    <span>指定流域出口</span>
+                    <Upload action="" class="upload">
+                      <Button icon="ios-cloud-upload-outline" :disabled="outletType=='outletFromMapDraw'">上传outlet文件</Button>
+                    </Upload>
                   </div>
                   <div>
-                    <Upload action="" class="upload">
-                      <Button icon="ios-cloud-upload-outline">上传outlet文件</Button>
-                    </Upload>
-                    <Button>在地图上指定流域出口</Button><br>
+                    <span>在地图上指定流域出口</span>
+                    <i-switch v-model="outletDrawSwitch" :disabled="outletType=='outletFromLocal'">
+                      <Icon slot="open" type="md-pin" size="14"></Icon>
+                      <Icon slot="close" type="md-close" size="14"></Icon>
+                    </i-switch>
                   </div>
               </div>
               
@@ -248,6 +287,7 @@
 </template>
 
 <script>
+import request from "@/network/request";
 export default {
   name: 'CreateModel',
   props:{
@@ -260,6 +300,15 @@ export default {
       this.createModelShowTemp=newVal
     },
     immediate: true
+  },
+  created(){
+ 
+    this.initLevelLabel();
+  },
+  mounted(){
+    this.mapCM=this.$store.getters.storeMap;
+    this.initController();
+    this.listenDraw();
   },
   data() {
       const validateProjectName = (rule, value, callback) =>{
@@ -288,6 +337,7 @@ export default {
             callback()
           }
       };
+
       return {
         createModelShowTemp:false,
         formProjectItem:{
@@ -300,6 +350,14 @@ export default {
           ]
         },
         ///////
+        mapCM: null,
+        drawingLayerGroup: null,
+        basinScopeType:'basinScopeFromSystem',
+        basinCkb:false,
+        levelSelect: 7,
+        levelLayerList:[],
+        basinLayer: null,
+        querySwitch:false,
         DEMDataSize:90,
         formStreamNetworkValue:{
           streamValueArea:'1.62',
@@ -317,6 +375,9 @@ export default {
             {type:'number', validator:validateStreamValueArea, trigger: 'blur',} 
           ]
         },
+        outletType:'outletFromLocal',
+        outletDrawSwitch:false,
+        outletGeoJson:null,
         ////////
         soilMapList:[
           {
@@ -390,6 +451,140 @@ export default {
           this.$Message.error('Fail!');
         }
       })
+    },
+    initController(){
+      this.drawingLayerGroup = L.layerGroup([]);
+      this.drawingLayerGroup.addTo(this.mapCM);
+      var options = {
+        position: "topright", // toolbar position, options are 'topleft', 'topright', 'bottomleft', 'bottomright'
+        drawMarker: true, // adds button to draw markers
+        drawCircleMarker:false,
+        drawPolyline: false, // adds button to draw a polyline
+        drawRectangle: false, // adds button to draw a rectangle
+        drawPolygon: false, // adds button to draw a polygon
+        drawCircle: false, // adds button to draw a cricle
+        cutPolygon: false, // adds button to cut a hole in a polygon
+        editMode: true, // adds button to toggle edit mode for all layers
+        dragMode: false,
+        removalMode: true // adds a button to remove layers
+      };
+      this.mapCM.pm.addControls(options);
+    },
+    listenDraw(){
+      // console.log('listenDraw Begin');
+      var _this = this;
+      this.mapCM.on('pm:create', e=>{
+        if (_this.outletDrawSwitch) {
+          _this.drawingLayerGroup.clearLayers();
+          _this.drawingLayerGroup.addLayer(e.layer);
+          _this.outletGeoJson = e.layer._latlng//.toGeoJSON()
+          console.log('create outlet point');
+        }
+      });
+      this.mapCM.on('pm:remove', e=>{
+        _this.drawingLayerGroup.clearLayers();
+      });
+      this.mapCM.on('click', e=>{
+          if(_this.querySwitch){
+              var latlng = e.latlng
+              var lon = latlng['lng'];
+              var lat = latlng['lat'];
+              var baseUrl="";
+              baseUrl = "/basins/querySubLevel/" + this.levelSelect + "?lon=" + lon +"&lat=" + lat;
+              this.$Spin.show();
+              request
+              .get(baseUrl)
+              .then(res=>{
+                  if(res.data!=0){
+                      var tempGeoJSON = res.data;
+                      _this.addGeoJSONToMap(JSON.stringify(tempGeoJSON), "red");
+                      _this.$Spin.hide();
+                  }
+                  else{
+                      _this.$Message.error('No Basin Info Here.');
+                      _this.$Spin.hide();
+                  };
+              })
+              .catch(err=>{
+                  confirm('Something Wrong!');
+                  _this.$Spin.hide();
+              });
+              // this.showDownloadGeoJSONBtn = true;
+              // this.toDownloadGeoJSONStr = basin_scale;
+              // this.addGeoJSONToMap(JSON.stringify(basin_scale), "red");  
+          }
+      });
+    },
+    initLevelLabel(){
+      for(var i=2;i<11;i++){
+        var item = {
+          value: i,
+          label: 'level ' + i
+        }
+        this.levelLayerList.push(item);
+      }
+    },
+    showBasinsLayer(show){
+      if(show){
+        this.changeStandardBasinsLevel()
+        console.log('Show Basin Layer');
+      }
+      else{
+        console.log('Hide Basins Layer.');
+        try{
+            this.basinLayer.remove();
+        }catch{}
+      }
+    },
+    changeStandardBasinsLevel(){
+      try{
+          this.basinLayer.remove();
+      }catch{}
+      var level = this.levelSelect;
+      //   this.basinLayer = L.tileLayer.wms('http://210.26.48.56:30122/geoserver/Basin_shp/wms',{
+      this.basinLayer = L.tileLayer.wms('http://localhost:8081/geoserver/Basin_shp/wms',{
+          layers: 'Asia_level_0' + level,
+          format: 'image/png',
+          transparent: true,
+          noWarp:true
+      }).addTo(this.mapCM);
+      console.log('Show Standard Basin Layer in Level ' + level + '.');
+    },
+    changeBasinScopeDataResource(){
+      if (this.basinScopeType!=='basinScopeFromSystem') {
+        this.basinCkb=false;
+        this.querySwitch=false;
+        try{
+          this.basinLayer.remove();
+        }catch{}
+      } 
+    },
+    addGeoJSONToMap(GeoJSONStr, color){
+      this.drawingLayerGroup.clearLayers();
+      var file = JSON.parse(GeoJSONStr);
+      var geoJsonLayer = L.geoJSON(file, {
+          style: function(feature) {
+              return { color: color , fillColor: color, fillOpacity:0};
+          }
+      }).bindPopup(function(layer) {
+          return layer.feature.properties.description;
+      });
+      this.loadFeatures(geoJsonLayer);
+      //平移至数据位置
+      this.mapCM.fitBounds(geoJsonLayer.getBounds());
+    },
+    loadFeatures(featureCollection) {
+      featureCollection.eachLayer(layer => {
+          this.drawingLayerGroup.addLayer(layer);
+      });
+    },
+    removeBasinLayer(){
+      console.log('log');
+        console.log('Select local data, remove basin layer');
+        try{
+          this.basinLayer.remove();
+        }catch{}
+      
     },
     transformDecimal(number, i) {
       let decimalNum = null;
@@ -488,15 +683,20 @@ export default {
     display: flex;
     flex-direction: row ;
     justify-content: space-around ;
-  }  
+  }    
+  .selectFlexBasin {
+    display: flex;
+    flex-direction: row ;
+    justify-content: center ;
+  } 
   .finishBtn{
     display: flex;
     justify-content: flex-end ;
     margin-top: 7px;
   }
   
-   #streamValueForm .ivu-form-item {
+   /* #streamValueForm .ivu-form-item {
     margin-bottom: 5px;
-  }
+  } */
 
 </style>

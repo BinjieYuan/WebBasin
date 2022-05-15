@@ -1,20 +1,22 @@
 <!--
  * @Author: your name
  * @Date: 2022-04-25 20:59:19
- * @LastEditTime: 2022-04-28 09:57:39
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2022-05-14 15:21:39
+ * @LastEditors: BinjieYuan yuanbj9035@163.com
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \WebBasin\front\src\components\MapView.vue
 -->
 <template>
   <div>
-    <div class="map" id="leafletMap"></div>
+    <div class="map" id="leafletMap"></div>                  
     <!-- <router-view></router-view> -->
   </div>
 </template>
 
 <script>
 import request from "@/network/request";
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 export default {
   name: 'MapView',
   data(){
@@ -158,7 +160,7 @@ export default {
           // 比例尺
           L.control
               .scale({
-                  position: "bottomleft"
+                  position: "bottomright"
               })
               .addTo(this.mapEl);
           // 绘图控件
@@ -174,6 +176,15 @@ export default {
               dragMode: false,
               removalMode: true // adds a button to remove layers
           };
+        //   this.mapEl.pm.addControls(options);
+          let DefaultIcon = L.icon({
+             iconUrl: icon,
+             shadowUrl: iconShadow,
+             iconSize: [24,36],
+             iconAnchor: [12,36]
+           });
+          
+          L.Marker.prototype.options.icon = DefaultIcon; 
       },
       listenDraw(){
       var _this = this;
