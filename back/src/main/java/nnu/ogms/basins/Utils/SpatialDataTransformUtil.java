@@ -29,7 +29,7 @@ import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
 
 
-public class Shp2Json {
+public class SpatialDataTransformUtil {
     /**
      *
      * @param shpPath
@@ -132,15 +132,15 @@ public class Shp2Json {
     public static boolean transformGeoJsonToShp(String geojson, String shpPath) {
         try {
             // open geojson
-            Reader reader = new StringReader(geojson);
-            GeometryJSON gjson = new GeometryJSON();
-            FeatureJSON fjson = new FeatureJSON(gjson);
-            FeatureCollection<SimpleFeatureType, SimpleFeature> features = fjson.readFeatureCollection(reader);
-            //geojson是文件
-//            InputStream in = new FileInputStream(geojsonPath);
+//            Reader reader = new StringReader(geojson);
 //            GeometryJSON gjson = new GeometryJSON();
 //            FeatureJSON fjson = new FeatureJSON(gjson);
-//            FeatureCollection<SimpleFeatureType, SimpleFeature> features = fjson.readFeatureCollection(in);
+//            FeatureCollection<SimpleFeatureType, SimpleFeature> features = fjson.readFeatureCollection(reader);
+            //geojson是文件
+            InputStream in = new FileInputStream(geojson);
+            GeometryJSON gjson = new GeometryJSON();
+            FeatureJSON fjson = new FeatureJSON(gjson);
+            FeatureCollection<SimpleFeatureType, SimpleFeature> features = fjson.readFeatureCollection(in);
             // convert schema for shapefile
             SimpleFeatureType schema = features.getSchema();
             GeometryDescriptor geom = schema.getGeometryDescriptor();
@@ -187,6 +187,7 @@ public class Shp2Json {
                     outFeatures.add(reType);
                 }
             }
+            in.close();
             return saveFeaturesToShp(outFeatures, outSchema, shpPath);
         } catch (IOException e) {
             e.printStackTrace();

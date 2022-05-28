@@ -1,8 +1,8 @@
 <!--
  * @Author: your name
  * @Date: 2021-12-27 13:56:51
- * @LastEditTime: 2022-04-30 10:43:19
- * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2022-05-27 15:44:56
+ * @LastEditors: BinjieYuan yuanbj9035@163.com
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \flaskVueSEIMS\client\src\components\HelloWorld.vue
 -->
@@ -474,7 +474,7 @@
 <script>
 import { mapGetters, mapState, mapActions } from 'vuex'
 import axios from 'axios';
-import request from "@/network/request";
+import {request} from "../../network/request";
 // import "@/assets/js/leaflet.pm.min.js";
 import "@/assets/js/leaflet.timedimension.min.js";
 
@@ -779,7 +779,7 @@ export default {
           }catch{}
           var level = this.levelSelect;
         //   this.basinLayer = L.tileLayer.wms('http://210.26.48.56:30122/geoserver/Basin_shp/wms',{
-          this.basinLayer = L.tileLayer.wms('http://localhost:8081/geoserver/Basin_shp/wms',{
+          this.basinLayer = L.tileLayer.wms('http://223.2.40.37:7070/geoserver/Basin_shp/wms',{
               layers: 'Asia_level_0' + level,
               format: 'image/png',
               transparent: true,

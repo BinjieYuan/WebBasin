@@ -2,16 +2,27 @@ package nnu.ogms.basins.Service;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import lombok.extern.slf4j.Slf4j;
 import nnu.ogms.basins.Entity.BasinsScopeEntity;
+import nnu.ogms.basins.Entity.ProjectEntity;
 import nnu.ogms.basins.Entity.SubBasinsScopeEntity;
+import nnu.ogms.basins.Utils.GDALUtil;
+import nnu.ogms.basins.Utils.SaveGeoJSON;
+import nnu.ogms.basins.Utils.SpatialDataTransformUtil;
+import nnu.ogms.basins.common.ErrorEnum;
+import nnu.ogms.basins.common.GeneralException;
+import nnu.ogms.basins.common.ResponseMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
+@Slf4j
 public class BasinsScopeService {
+
     private final MongoTemplate mongoTemplate;
 
     @Autowired
@@ -20,6 +31,14 @@ public class BasinsScopeService {
     }
 
     public Object queryScopeByLoc(double lon, double lat){
+        // 从前端拿到值以后，一般要先进行数据正确性的校验
+        // 经度范围是0-180°，纬度范围是0-90°
+        if (lon < 0.0 || lon > 180.0){
+            throw new GeneralException(ErrorEnum.LONGITUDE_SCOPE_ERROR);
+        }
+        if (lat < 0.0 || lat > 90.0){
+            throw new GeneralException(ErrorEnum.LATITUDE_SCOPE_ERROR);
+        }
         try {
             double[] point = new double[]{lon, lat};
 
@@ -32,11 +51,14 @@ public class BasinsScopeService {
             return mongoTemplate.findOne(query, BasinsScopeEntity.class);
 
         }catch (Exception e){
-            return 0;
+            // 1. 出错时一般要对异常信息进行描述，并抛给前端
+            log.error("****时报错:",e);
+            throw new GeneralException(ErrorEnum.QUERY_SCOPE_ERROR,"****出错，请检查****");
+//            return 0;
         }
     }
 
-    public Object querySubLevelByLoc(Integer level, double lon, double lat){
+    public Object querySubLevelByLoc(String projectName,Integer level, double lon, double lat){
         try {
             double[] point = new double[]{lon, lat};
             String collection = "Basin_lv" + level;
@@ -49,10 +71,11 @@ public class BasinsScopeService {
             Query query = new BasicQuery(queryCmd.toString());
             SubBasinsScopeEntity sbse = mongoTemplate.findOne(query, SubBasinsScopeEntity.class, collection);
             System.out.println(query);
+            SaveGeoJSON.saveBasinScopeJson(projectName, sbse);
             return sbse;
 
         }catch (Exception e){
-            return 0;
+            throw new GeneralException(ErrorEnum.QUERY_SUBBASIN_SCOPE_ERROR,"子流域查询出错");
         }
     }
 
@@ -74,6 +97,7 @@ public class BasinsScopeService {
             return 0;
         }
     }
+
 
 
 }

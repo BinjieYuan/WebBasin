@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2022-04-28 13:53:55
- * @LastEditTime: 2022-05-14 17:05:07
+ * @LastEditTime: 2022-05-28 17:00:16
  * @LastEditors: BinjieYuan yuanbj9035@163.com
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \WebBasin\front\src\components\seimscontrol\CreateModel.vue
@@ -18,7 +18,7 @@
               <Form :model="formProjectItem" :label-width="80" :rules="ruleProject" ref="formProjectItem" inline>
                 <FormItem label="项目名称" prop='projectName'>
                   <Input v-model="formProjectItem.projectName" placeholder="请输入项目名称" clearable style="width: 220px"></Input>
-                  <Button @click="handleSubmitProject('formProjectItem')">确定</Button>
+                  <Button @click="namedProject('formProjectItem')">确定</Button>
                 </FormItem>
                 <!-- <FormItem>
                   <Button @click="handleSubmitProject('formProjectItem')">确定</Button>
@@ -26,7 +26,7 @@
               </Form>
             </div>
             <div class="finishBtn">
-              <Button>下一步</Button>
+              <Button type="info" ghost>完成新建项目</Button>
             </div>
           </div>
         </TabPane>   
@@ -59,10 +59,19 @@
                     </Select>
                   </div>
                   <span>开启流域选择</span>
-                  <i-switch v-model="querySwitch" :disabled="!basinCkb">
+                  <i-switch v-model="querySwitch" :disabled="!basinCkb" @change="querySwitchChange">
                     <Icon slot="open" type="md-pin" size="14"></Icon>
                     <Icon slot="close" type="md-close" size="14"></Icon>
-                  </i-switch>
+                  </i-switch><br>
+                  <div v-if="basinScopeSelectSystem">
+                    <Icon type="ios-checkmark-circle-outline" color="#19be6b" size="20"/>
+                    <span>已选中流域范围</span>
+                    <ButtonGroup size="small">
+                      <Button type="success" ghost @click="basinScopeSelectSystemApply" :loading="basinScopeSelectLoadingStatus">确定</Button>
+                      <Button type="error" ghost @click="basinScopeSelectSystemReselect">重选</Button>
+                    </ButtonGroup>
+                  </div>
+                  
                 </div>
                 <div>
                   <Upload action="" class="upload" >
@@ -84,7 +93,7 @@
                   <FormItem prop='streamValueArea'>
                     <Input :min="0" v-model="formStreamNetworkValue.streamValueArea" style="width: 90px" @on-change="convertCellArea('area')"></Input>
                     <span>（单位：km<sup>2</sup>）</span>
-                    <Button  @click="handleSubmitProject('formStreamNetworkValue')" style="margin-left:3px">确定</Button>
+                    <Button  @click="streamNetValueCommit" style="margin-left:3px">确定</Button>
                   </FormItem>
                 
                 </Form>
@@ -92,33 +101,62 @@
 
               <Divider orientation="left">流域出口设置</Divider>
               <div>
-                <RadioGroup v-model="outletType" style="margin:5px 0px 5px 28px" >
-                  <Radio label="outletFromLocal">
-                    <span>使用本地上传的outlet数据</span>
-                  </Radio>
-                  <Radio label="outletFromMapDraw" style="padding-left:70px">
+                <RadioGroup v-model="outletType" style="margin:5px 0px 5px 28px" @on-change="changeOutletDataResource">
+                  <Radio label="outletFromMapDraw" >
                     <span>使用绘图工具在页面上绘制</span>
+                  </Radio>
+                  <Radio label="outletFromLocal" style="padding-left:45px">
+                    <span>使用本地上传的outlet数据</span>
                   </Radio>
                 </RadioGroup><br>
               </div>
               <div class="selectFlex">
-                  <div>
-                    <Upload action="" class="upload">
-                      <Button icon="ios-cloud-upload-outline" :disabled="outletType=='outletFromMapDraw'">上传outlet文件</Button>
-                    </Upload>
-                  </div>
-                  <div>
+                  <div style="width:210px;margin-left:24px">
                     <span>在地图上指定流域出口</span>
                     <i-switch v-model="outletDrawSwitch" :disabled="outletType=='outletFromLocal'">
                       <Icon slot="open" type="md-pin" size="14"></Icon>
                       <Icon slot="close" type="md-close" size="14"></Icon>
-                    </i-switch>
+                    </i-switch><br>
+                    <div v-if="outletOnMap">
+                      <span><Icon type="ios-checkmark-circle-outline" color="#19be6b" size="20"/>已选中流域出口</span>
+                      <ButtonGroup size="small">
+                        <Button type="success" ghost @click="basinOutletSelectApply" :loading="basinOutletSelectLoadingStatus">确定</Button>
+                        <Button type="error" ghost @click="basinOutletReselect">重选</Button>
+                      </ButtonGroup>
+                    </div>
+                  </div>
+                  <div style="width:210px">
+                    <Upload 
+                      ref="outletUpload"
+                      :show-upload-list='false'
+                      :on-success="uploadSuccess"
+                      :format="['shp','shx','dbf','prj']"
+                      :on-format-error="handleFormatError"
+                      :max-size="102400"
+                      :on-exceeded-size="handleMaxSize"
+                      :before-upload="handleBeforeUpload"
+                      :multiple='true'
+                      action="/upload">
+                      <Button icon="ios-cloud-upload-outline" :disabled="outletType=='outletFromMapDraw'">上传outlet文件</Button>
+                    </Upload>
+                    <div v-if="uploadList.length > 0" >
+                      <span>待上传文件:</span><br>
+                      <Tag type="border" closable color="primary" 
+                          v-for="(file,index) in uploadList" :key="index" :name="file.name" @on-close="outletUploadClose">
+                        {{ file.name }}
+                      </Tag>
+                      <Button @click="upload" :loading="loadingStatus">{{ loadingStatus ? '上传中' : '点击上传' }}</Button>
+                    </div>
                   </div>
               </div>
               
-
               <div class="finishBtn">
-                <Button >生成流域划分结果</Button>
+                <Button v-if="subbasinDelineationStatus=='modelSetting'" type="info" ghost @click="sdDelineation">生成流域划分结果</Button>
+                <div v-else-if="subbasinDelineationStatus=='modelRunning'" style="width:85%">
+                  <i-progress :percent="99.99" status="active" hide-info></i-progress>
+                  <span>流域划分运行中...</span>
+                </div>
+                <Button v-else-if="subbasinDelineationStatus=='modelRunSuccess'" type="success" ghost >生成流域划分结果</Button>
               </div>
 
           </div>
@@ -183,7 +221,7 @@
               </div>
             </div>
             <div class="finishBtn">
-              <Button>完成模拟单元划分</Button>
+              <Button type="info" ghost>完成模拟单元划分</Button>
             </div>
           </div>
         </TabPane>
@@ -239,7 +277,7 @@
             </div>
           </div>
           <div class="finishBtn">
-            <Button>完成气象数据设置</Button>
+            <Button type="info" ghost>完成气象数据设置</Button>
           </div>
         </TabPane>
         <!-- 水文观测 -->
@@ -287,7 +325,8 @@
 </template>
 
 <script>
-import request from "@/network/request";
+import {request} from "@/network/request";
+import {requestGis} from "@/network/request";
 export default {
   name: 'CreateModel',
   props:{
@@ -352,12 +391,15 @@ export default {
         ///////
         mapCM: null,
         drawingLayerGroup: null,
+        drawingBasinLayerGroup: null,
         basinScopeType:'basinScopeFromSystem',
         basinCkb:false,
         levelSelect: 7,
         levelLayerList:[],
         basinLayer: null,
         querySwitch:false,
+        basinScopeSelectSystem:false,
+        basinScopeSelectLoadingStatus:false,
         DEMDataSize:90,
         formStreamNetworkValue:{
           streamValueArea:'1.62',
@@ -375,9 +417,16 @@ export default {
             {type:'number', validator:validateStreamValueArea, trigger: 'blur',} 
           ]
         },
-        outletType:'outletFromLocal',
+        outletType:'outletFromMapDraw',
         outletDrawSwitch:false,
         outletGeoJson:null,
+        uploadList: [],
+        outletMaxLength:4,
+        uploadMaxLength:1,
+        loadingStatus:false,
+        outletOnMap:false,
+        basinOutletSelectLoadingStatus:false,
+        subbasinDelineationStatus:'modelSetting',
         ////////
         soilMapList:[
           {
@@ -443,6 +492,39 @@ export default {
       }
   },
   methods: {
+    namedProject(name){
+      this.$refs[name].validate((valid) => {
+        if (valid) {
+          let params = new URLSearchParams();
+          params.append("newProjectName",this.formProjectItem.projectName);
+          request
+          .post('/project/create',params)
+          .then(res=>{ 
+            if (res.data.errCode == 200) {
+              this.$Message.success({
+                content:'项目命名成功',
+                duration: 3
+              });
+            } else {
+                this.$Message.error({
+                content:'项目命名失败，请重新命名',
+                duration: 3,
+                });
+                this.formProjectItem.projectName='';
+            }
+          })
+          .catch(e =>  {
+            this.$Message.error('项目命名失败，请重新命名');
+          });
+        } else {
+            this.$Message.error({
+            content:'项目命名失败，请重新命名',
+            duration: 3,
+            });
+            this.formProjectItem.projectName='';
+        }
+      })
+    },
     handleSubmitProject (name) {
       this.$refs[name].validate((valid) => {
         if (valid) {
@@ -455,6 +537,8 @@ export default {
     initController(){
       this.drawingLayerGroup = L.layerGroup([]);
       this.drawingLayerGroup.addTo(this.mapCM);
+      this.drawingBasinLayerGroup = L.layerGroup([]);
+      this.drawingBasinLayerGroup.addTo(this.mapCM);
       var options = {
         position: "topright", // toolbar position, options are 'topleft', 'topright', 'bottomleft', 'bottomright'
         drawMarker: true, // adds button to draw markers
@@ -479,40 +563,43 @@ export default {
           _this.drawingLayerGroup.addLayer(e.layer);
           _this.outletGeoJson = e.layer._latlng//.toGeoJSON()
           console.log('create outlet point');
+          _this.outletOnMap=true;
         }
       });
       this.mapCM.on('pm:remove', e=>{
         _this.drawingLayerGroup.clearLayers();
+        _this.outletOnMap=false;
       });
       this.mapCM.on('click', e=>{
-          if(_this.querySwitch){
-              var latlng = e.latlng
-              var lon = latlng['lng'];
-              var lat = latlng['lat'];
-              var baseUrl="";
-              baseUrl = "/basins/querySubLevel/" + this.levelSelect + "?lon=" + lon +"&lat=" + lat;
-              this.$Spin.show();
-              request
-              .get(baseUrl)
-              .then(res=>{
-                  if(res.data!=0){
-                      var tempGeoJSON = res.data;
-                      _this.addGeoJSONToMap(JSON.stringify(tempGeoJSON), "red");
-                      _this.$Spin.hide();
-                  }
-                  else{
-                      _this.$Message.error('No Basin Info Here.');
-                      _this.$Spin.hide();
-                  };
-              })
-              .catch(err=>{
-                  confirm('Something Wrong!');
-                  _this.$Spin.hide();
-              });
-              // this.showDownloadGeoJSONBtn = true;
-              // this.toDownloadGeoJSONStr = basin_scale;
-              // this.addGeoJSONToMap(JSON.stringify(basin_scale), "red");  
-          }
+        if(_this.querySwitch){
+            var latlng = e.latlng;
+            var lon = latlng['lng'];
+            var lat = latlng['lat'];
+            var baseUrl="";
+            baseUrl = "/basins/querySubLevel/" + this.levelSelect + "?projectName=" + this.formProjectItem.projectName +"&lon=" + lon +"&lat=" + lat;
+            this.$Spin.show();
+            request
+            .get(baseUrl)
+            .then(res=>{
+              if(res.data!=0){
+                var tempGeoJSON = res.data;
+                _this.addGeoJSONToMap(JSON.stringify(tempGeoJSON), "red");
+                _this.$Spin.hide();
+                _this.basinScopeSelectSystem=true;
+              }
+              else{
+                _this.$Message.error('No Basin Info Here.');
+                _this.$Spin.hide();
+              };
+            })
+            .catch(err=>{
+              confirm('Something Wrong!');
+              _this.$Spin.hide();
+            });
+            // this.showDownloadGeoJSONBtn = true;
+            // this.toDownloadGeoJSONStr = basin_scale;
+            // this.addGeoJSONToMap(JSON.stringify(basin_scale), "red");  
+        }
       });
     },
     initLevelLabel(){
@@ -531,6 +618,8 @@ export default {
       }
       else{
         console.log('Hide Basins Layer.');
+        this.querySwitch=false;
+        this.querySwitchChange(false);
         try{
             this.basinLayer.remove();
         }catch{}
@@ -542,7 +631,7 @@ export default {
       }catch{}
       var level = this.levelSelect;
       //   this.basinLayer = L.tileLayer.wms('http://210.26.48.56:30122/geoserver/Basin_shp/wms',{
-      this.basinLayer = L.tileLayer.wms('http://localhost:8081/geoserver/Basin_shp/wms',{
+      this.basinLayer = L.tileLayer.wms('http://223.2.40.37:7070/geoserver/Basin_shp/wms',{
           layers: 'Asia_level_0' + level,
           format: 'image/png',
           transparent: true,
@@ -556,11 +645,12 @@ export default {
         this.querySwitch=false;
         try{
           this.basinLayer.remove();
+          this.showBasinsLayer(false)
         }catch{}
       } 
     },
     addGeoJSONToMap(GeoJSONStr, color){
-      this.drawingLayerGroup.clearLayers();
+      this.drawingBasinLayerGroup.clearLayers();
       var file = JSON.parse(GeoJSONStr);
       var geoJsonLayer = L.geoJSON(file, {
           style: function(feature) {
@@ -575,16 +665,249 @@ export default {
     },
     loadFeatures(featureCollection) {
       featureCollection.eachLayer(layer => {
-          this.drawingLayerGroup.addLayer(layer);
+          this.drawingBasinLayerGroup.addLayer(layer);
       });
     },
     removeBasinLayer(){
-      console.log('log');
-        console.log('Select local data, remove basin layer');
-        try{
-          this.basinLayer.remove();
-        }catch{}
-      
+      console.log('Select local data, remove basin layer');
+      try{
+        this.basinLayer.remove();
+      }catch{}
+    },
+    basinScopeSelectSystemReselect(){
+      this.drawingBasinLayerGroup.clearLayers();
+      this.basinScopeSelectSystem=false;
+    },
+    basinScopeSelectSystemApply(){
+      //请求后端geojson转shp
+      this.basinScopeSelectLoadingStatus=true;
+      console.log("basin scope selected apply");
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      request.post('/basins/preprocess/geojson2shp',params)
+      .then(res=>{
+        if (res.data.errCode == 200) {
+              this.$Notice.success({
+                title:'选择流域范围成功！',
+                duration: 5
+              });
+              this.querySwitch=false;
+        } else {
+            this.$Notice.error({
+            title:'选择流域范围失败，请重新选择！',
+            duration: 5,
+            });
+          }
+      }).catch(e=>{
+          this.$Notice.error({
+          title:'选择流域范围失败，请重新选择！',
+          duration: 5,
+          });
+      })
+      window.setTimeout(()=>{
+        this.basinScopeSelectLoadingStatus=false;
+      }, 5000);
+    },
+    querySwitchChange(status){
+      if (status) {
+        
+      } else {
+        this.basinScopeSelectSystem=false;
+        this.drawingBasinLayerGroup.clearLayers();
+      }
+    },
+    streamNetValueCommit(){
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      params.append("streamNetValue",this.formStreamNetworkValue.streamValueCell);
+      request.post('/basins/preprocess/streamNetworkValue',params)
+      .then(res=>{
+        if (res.data.errCode == 200) {
+          this.$Notice.success({
+            title:'河网阈值设置成功',
+            duration:10
+          })
+        }else {
+          this.$Notice.warning({
+            title: '河网阈值设置失败，请重新设置！',
+            desc: '失败原因： ' + res.data.msg,
+            duration:10
+          });
+        }
+      }).catch(e => {
+          this.$Notice.error({
+            title: '河网阈值设置失败，请重新设置！',
+          });
+      })
+      // this.handleSubmitProject('formStreamNetworkValue')
+    },
+    uploadSuccess(res, file) {
+      if (res.errCode == 200) {
+        this.$Notice.success({
+          title:'文件上传成功',
+          duration:10
+        })
+      } else {
+        this.$Notice.warning({
+          title: '文件上传失败',
+          desc: '失败原因： ' + res.msg,
+          duration:10
+        });
+      }
+    },
+    handleFormatError(file) {
+      this.$Notice.warning({
+        title: '文件格式不正确',
+        desc: file.name + '的文件格式不对，请重新选择文件进行上传。',
+        duration:10
+      });
+    },
+    handleMaxSize(file) {
+      this.$Notice.warning({
+        title: '超过文件大小限制',
+        desc: '文件  ' + file.name + ' 超过100MB.'
+      });
+    },
+    handleBeforeUpload(file) {
+      this.uploadList.push(file);
+      const FileExt = file.name.replace(/.+\./, "");//取得文件的后缀名
+      const check = this.uploadList.length <= this.outletMaxLength;
+      if (!check) {
+        this.$Notice.warning({
+          title: '最多只能上传' + this.outletMaxLength + '个文件.',
+          duration:10
+        });
+      }else if (['shp','shx','dbf','prj'].indexOf(FileExt.toLowerCase()) === -1) { //
+        this.$Notice.error({title:'请上传以shp,shx,dbf,prj结尾的文件', duration:10});
+        var index = this.uploadList.indexOf(file.name);
+        this.uploadList.splice(index, 1);
+      }else if (file.size > 102400){
+        this.$Notice.warning({
+          title: '超过文件大小限制',
+          desc: '文件  ' + file.name + ' 超过100MB.',
+          duration:10
+        });
+        var index = this.uploadList.indexOf(file.name);
+        this.uploadList.splice(index, 1);
+      }
+      return false;
+    },
+    upload(){
+      this.loadingStatus=true;
+      let requestConfig = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+      }
+      for(let i = 0; i < this.uploadList.length; i++) {
+        let fileFormData = new FormData();
+        fileFormData.append('file', this.uploadList[i]);
+        request
+        .post('/file/upload', fileFormData, requestConfig)
+        .then(res=>{
+          if (res.data.errCode == 200) {
+            this.$Notice.success({
+              title:this.uploadList[i].name + '上传成功',
+              duration:10
+            })
+          }else {
+            this.$Notice.warning({
+              title: this.uploadList[i].name + '上传失败',
+              desc: '失败原因： ' + res.data.msg,
+              duration:10
+            });
+          }
+        }).catch(e => {
+            this.$Notice.error({
+              title: this.uploadList[i].name + '上传失败'
+            });
+          })
+        }
+        window.setTimeout(()=>{
+          this.loadingStatus=false;
+        }, 3000);
+    },
+    outletUploadClose(event,name){
+      for(var i=this.uploadList.length-1;i>=0;i--){
+        if(this.uploadList[i].name==name)
+        {
+          this.uploadList.splice(i,1);
+        }
+      }
+    },
+    changeOutletDataResource(){
+      if (this.outletType==='outletFromMapDraw') {
+        this.uploadList=[]
+      } else if(this.outletType==='outletFromLocal'){
+        this.outletGeoJson=null;
+        this.outletDrawSwitch=false;
+        this.outletOnMap=false;
+        this.drawingLayerGroup.clearLayers();
+      }
+    },
+    outletPointShp(lat,lon){
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      params.append("lat",lat);
+      params.append("lon",lon);
+      request.post('/basins/preprocess/outletShp',params)
+      .then(res=>{
+        if (res.data.errCode == 200) {
+          this.$Notice.success({
+            title:'outlet设置成功',
+            duration:10
+          })
+        }else {
+          this.$Notice.warning({
+            title: 'outlet设置失败，请重新设置！',
+            desc: '失败原因： ' + res.data.msg,
+            duration:10
+          });
+        }
+      }).catch(e => {
+          this.$Notice.error({
+            title: 'outlet设置失败，请重新设置！',
+          });
+      })
+      window.setTimeout(()=>{
+        this.basinOutletSelectLoadingStatus=false;
+      }, 3000);
+    },
+    basinOutletSelectApply(){
+      this.basinOutletSelectLoadingStatus=true;
+      this.outletPointShp(this.outletGeoJson.lat,this.outletGeoJson.lng);
+    },
+    basinOutletReselect(){
+      this.drawingLayerGroup.clearLayers();
+      this.outletOnMap=false;
+    },
+    sdDelineation(){
+      this.subbasinDelineationStatus='modelRunning';
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      requestGis.post('/ws-hydro/SEIMSDataProcessing/sdDelineation',params)
+      .then(res=>{
+        console.log(res);
+        if (res.status == 200) {
+          this.$Notice.success({
+            title:'流域划分结果已生成',
+            duration:10
+          })
+        this.subbasinDelineationStatus='modelRunSuccess';
+        }else {
+          this.$Notice.warning({
+            title: '流域划分失败，请重新设置！',
+            desc: '失败原因： ' + res.data.msg,
+            duration:10
+          });
+          this.subbasinDelineationStatus='modelSetting';
+        }
+      }).catch(e => {
+          this.$Notice.error({
+            title: '流域划分失败，请重新设置！',
+          });
+          this.subbasinDelineationStatus='modelSetting';
+      })
     },
     transformDecimal(number, i) {
       let decimalNum = null;
@@ -691,8 +1014,12 @@ export default {
   } 
   .finishBtn{
     display: flex;
-    justify-content: flex-end ;
+    justify-content: center ;
     margin-top: 7px;
+    text-align: center;
+  }
+  .finishBtn>button{
+    width: 90%;
   }
   
    /* #streamValueForm .ivu-form-item {

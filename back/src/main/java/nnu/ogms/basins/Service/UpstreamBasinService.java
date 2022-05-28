@@ -7,7 +7,7 @@ import com.mongodb.DBObject;
 import nnu.ogms.basins.Entity.SubBasinsScopeEntity;
 import nnu.ogms.basins.Entity.ZipFileRequest;
 import nnu.ogms.basins.Utils.RunExe;
-import nnu.ogms.basins.Utils.Shp2Json;
+import nnu.ogms.basins.Utils.SpatialDataTransformUtil;
 import nnu.ogms.basins.Utils.ZipUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -94,7 +94,7 @@ public class UpstreamBasinService {
             // shp to geojson
             String shpFilePath = outputDirectory + timeStamp + "_bound.shp";
             String jsonFilePath = outputDirectory + timeStamp + "_bound.geojson";
-            String JsonString = Shp2Json.transformShpToGeoJson(shpFilePath, jsonFilePath);
+            String JsonString = SpatialDataTransformUtil.transformShpToGeoJson(shpFilePath, jsonFilePath);
             String nowTime = DateUtil.now();
             System.out.println(nowTime + "-qureyUpstreamBasin " + cmdRun);
             return JsonString;
