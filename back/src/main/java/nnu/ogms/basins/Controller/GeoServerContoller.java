@@ -16,7 +16,7 @@ public class GeoServerContoller {
     @Autowired
     GeoServerPublisher geoServerPublisher;
 
-    @PostMapping("/shapefile/publish")
+    @PostMapping("/publish")
     public ResponseMessage publishGeoserverMap(@RequestBody PublishInfoVo publishInfoVo){
         geoServerPublisher.publish(publishInfoVo);
         return ResponseMessage.success();
