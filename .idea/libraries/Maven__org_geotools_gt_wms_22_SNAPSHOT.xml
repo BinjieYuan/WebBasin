@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.geotools:gt-wms:22-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/geotools/gt-wms/22-SNAPSHOT/gt-wms-22-20200817.090528-42.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/geotools/gt-wms/22-SNAPSHOT/gt-wms-22-20200817.090528-42-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/geotools/gt-wms/22-SNAPSHOT/gt-wms-22-20200817.090528-42-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
