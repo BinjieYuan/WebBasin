@@ -43,6 +43,11 @@ public class ResponseMessage<T> {
 
     }
 
+    public static ResponseMessage success(){
+        return success(null,null);
+
+    }
+
     public Integer getErrCode() {
         return errCode;
     }

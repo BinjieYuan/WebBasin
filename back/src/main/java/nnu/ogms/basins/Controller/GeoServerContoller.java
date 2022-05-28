@@ -1,7 +1,7 @@
 package nnu.ogms.basins.Controller;
 
+import nnu.ogms.basins.Service.GeoServerPublisher;
 import nnu.ogms.basins.common.ResponseMessage;
-import nnu.ogms.basins.service.GeoServerPublisher;
 import nnu.ogms.basins.vo.PublishInfoVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
