@@ -44,10 +44,6 @@ public class GeoServerPublisher {
     public void publish(PublishInfoVo publishInfoVo) {
 
         File file = new File(DATA_DIR + publishInfoVo.getFileName());
-        if (0 < 1)
-        {
-            throw new GeneralException(ErrorEnum.FILE_NOT_EXIST_ERROR);
-        }
         if (!file.exists())
         {
             throw new GeneralException(ErrorEnum.FILE_NOT_EXIST_ERROR,file.getName());
@@ -79,14 +75,6 @@ public class GeoServerPublisher {
         }else {
             log.info("workspace {} already exists." + publishInfoVo.getWorkSpace());
         }
-        if (publishInfoVo.getDataType() == 1){
-            // 发布矢量图层
-            publishShape(geoServerRESTManager,publishInfoVo,file);
-        }else if (publishInfoVo.getDataType() == 2){
-            // 发布栅格图层
-            publishTiff(geoServerRESTManager,publishInfoVo,file);
-        }
-
         // style样式
         String styleName = publishInfoVo.getStyleName();
         // 如果未指定style 或 未发布指定的style，则使用默认style
@@ -96,6 +84,15 @@ public class GeoServerPublisher {
             File styleFile = new File(styleFilePath);
             restPublisher.publishStyleInWorkspace(workSpace, styleFile, styleName);
         }
+        if (publishInfoVo.getDataType() == 1){
+            // 发布矢量图层
+            publishShape(geoServerRESTManager,publishInfoVo,file);
+        }else if (publishInfoVo.getDataType() == 2){
+            // 发布栅格图层
+            publishTiff(geoServerRESTManager,publishInfoVo,file);
+        }
+
+
 
     }
 
@@ -117,6 +114,8 @@ public class GeoServerPublisher {
             } catch (MalformedURLException e) {
                 e.printStackTrace();
             }
+        }else {
+            throw new GeneralException(ErrorEnum.DATASTORE_EXIST_ERROR);
         }
 
         // 图层layer

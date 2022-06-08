@@ -7,6 +7,8 @@ public enum ErrorEnum {
     QUERY_SCOPE_ERROR(10001,400,"查询范围错误"),
     LONGITUDE_SCOPE_ERROR(10002,400,"纬度范围错误"),
     LATITUDE_SCOPE_ERROR(10002,400,"经度范围错误"),
+    FILE_NOT_EXIST_ERROR(10002,400,"文件不存在"),
+    DATASTORE_EXIST_ERROR(10003,400,"数据已发布过，不能重复发布，请修改 dateset name"),
     ;
 
     private Integer code;

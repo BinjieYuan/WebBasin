@@ -151,6 +151,10 @@
             <snapshots><enabled>true</enabled></snapshots>
             <releases><enabled>false</enabled></releases>
         </repository>
+        <repository>
+            <id>GeoSolutions</id>
+            <url>http://maven.geo-solutions.it/</url>
+        </repository>
     </repositories>
 
     <build>
@@ -180,5 +184,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
