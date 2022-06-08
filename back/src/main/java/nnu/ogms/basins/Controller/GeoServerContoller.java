@@ -2,16 +2,12 @@ package nnu.ogms.basins.Controller;
 
 import nnu.ogms.basins.Service.GeoServerPublisher;
 import nnu.ogms.basins.common.ResponseMessage;
+import nnu.ogms.basins.vo.PublishInfoListVo;
 import nnu.ogms.basins.vo.PublishInfoVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * geoserver 微服务
- */
+
 @RestController
 @RequestMapping("/geoserver")
 public class GeoServerContoller {
@@ -22,6 +18,18 @@ public class GeoServerContoller {
     @PostMapping("/publish")
     public ResponseMessage publishGeoserverMap(@RequestBody PublishInfoVo publishInfoVo){
         geoServerPublisher.publish(publishInfoVo);
+        return ResponseMessage.success();
+    }
+
+    @PostMapping("/publish/layers")
+    public ResponseMessage publishGeoserverMap(@RequestBody PublishInfoListVo publishInfoVoList){
+        geoServerPublisher.publishLayerGroup(publishInfoVoList);
+        return ResponseMessage.success();
+    }
+
+    @GetMapping("/publish/layers/test")
+    public ResponseMessage publishTest(){
+        geoServerPublisher.publishLayersTest();
         return ResponseMessage.success();
     }
 }

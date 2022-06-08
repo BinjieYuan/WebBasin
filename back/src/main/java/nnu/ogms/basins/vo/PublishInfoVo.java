@@ -19,7 +19,7 @@ public class PublishInfoVo {
     /**
      * 数据存储名称
      */
-    private String dataSetName;
+    private String dataStoreName;
     /**
      * 图层名称
      */
@@ -32,5 +32,18 @@ public class PublishInfoVo {
      * 数据类型:1 矢量 2 tiff
      */
     private Integer dataType;
+
+    public PublishInfoVo() {
+    }
+
+    public PublishInfoVo(String workSpace, LayerVo layerVo){
+        this.workSpace = workSpace;
+        this.fileName = layerVo.getFileName();
+        this.styleName = layerVo.getStyleName();
+        this.dataStoreName = layerVo.getDataStoreName();
+        this.layerName = layerVo.getLayerName();
+        this.crs = layerVo.getCrs();
+        this.dataType = layerVo.getDataType();
+    }
 
 }

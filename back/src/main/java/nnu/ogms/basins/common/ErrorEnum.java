@@ -9,6 +9,11 @@ public enum ErrorEnum {
     LATITUDE_SCOPE_ERROR(10002,400,"经度范围错误"),
     FILE_NOT_EXIST_ERROR(10002,400,"文件不存在"),
     DATASTORE_EXIST_ERROR(10003,400,"数据已发布过，不能重复发布，请修改 dateset name"),
+    LAYER_EXIST_ERROR(10004,400,"图层已存在，不能重复发布，请修改 layer name"),
+    SHP_FILE_NOT_ZIP_ERROR(10005,400,"shp 源文件必须为 zip 压缩包文件"),
+    PUBLISH_LIST_EMPTY_ERROR(10006,400,"前端传入数据不能为空"),
+    LAYER_GROUP_EXIST_ERROR(10007,400,"图层组已存在，不能重复发布"),
+    LAYER_NOT_EXIST_ERROR(10004,400,"图层不存在"),
     ;
 
     private Integer code;
