@@ -15,12 +15,22 @@ public class GeoServerContoller {
     @Autowired
     GeoServerPublisher geoServerPublisher;
 
+    /**
+     * 发布单一图层
+     * @param publishInfoVo
+     * @return
+     */
     @PostMapping("/publish")
     public ResponseMessage publishGeoserverMap(@RequestBody PublishInfoVo publishInfoVo){
         geoServerPublisher.publish(publishInfoVo);
         return ResponseMessage.success();
     }
 
+    /**
+     * 发布图层组
+     * @param publishInfoVoList
+     * @return
+     */
     @PostMapping("/publish/layers")
     public ResponseMessage publishGeoserverMap(@RequestBody PublishInfoListVo publishInfoVoList){
         geoServerPublisher.publishLayerGroup(publishInfoVoList);
