@@ -19,6 +19,9 @@ public enum ErrorEnum {
     FILE_COPY_ERROR(20008,400,"文件复制失败"),
     FILE_CONFIG_WRITE_ERROR(20009,400,"config文件修改失败"),
     FILE_POINT_SHP_ERROR(20010,400,"point点坐标生成shp文件失败"),
+    FILE_SIMULATION_UNIT_ERROR(20010,400,"SimulationUnit生成失败"),
+    FILE_NOT_EXIST_ERROR(20011,400,"文件不存在"),
+    DATASTORE_EXIST_ERROR(20013,400,"GeoserverDatastore Error"),
     ;
 
     private Integer code;

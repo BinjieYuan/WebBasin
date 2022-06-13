@@ -42,6 +42,10 @@ public class ResponseMessage<T> {
         return success(object,null);
 
     }
+    public static ResponseMessage success(){
+        return success(null,null);
+
+    }
 
     public Integer getErrCode() {
         return errCode;

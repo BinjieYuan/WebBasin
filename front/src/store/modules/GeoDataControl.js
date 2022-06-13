@@ -1,21 +1,15 @@
-import L from 'leaflet';
-import createPersistedState from "vuex-persistedstate"
 
 const state = () =>  ({
-  storeMap: null,
-  levelSelect:7,
-  mapLayers: {
-    basinLayer: null,
-  }
+  projectName: null,
 })
 
 const getters = {
-  storeMap: state => state.storeMap
+  projectName: state => state.projectName
 }
 
 const mutations = {
-  SET_MAP_OBJECT(state, map) {
-    state.storeMap = map;
+  SET_PROJECT_NAME(state, name) {
+    state.projectName = name;
   },
 
 }

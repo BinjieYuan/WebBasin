@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2022-04-28 13:53:55
- * @LastEditTime: 2022-05-28 17:00:16
+ * @LastEditTime: 2022-06-13 17:11:07
  * @LastEditors: BinjieYuan yuanbj9035@163.com
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \WebBasin\front\src\components\seimscontrol\CreateModel.vue
@@ -151,14 +151,19 @@
               </div>
               
               <div class="finishBtn">
+                <!-- <Button v-if="subbasinDelineationStatus=='modelSetting'" type="info" ghost @click="geoserverPublih">生成流域划分结果</Button> -->
                 <Button v-if="subbasinDelineationStatus=='modelSetting'" type="info" ghost @click="sdDelineation">生成流域划分结果</Button>
                 <div v-else-if="subbasinDelineationStatus=='modelRunning'" style="width:85%">
                   <i-progress :percent="99.99" status="active" hide-info></i-progress>
                   <span>流域划分运行中...</span>
                 </div>
-                <Button v-else-if="subbasinDelineationStatus=='modelRunSuccess'" type="success" ghost >生成流域划分结果</Button>
+                <div v-else-if="subbasinDelineationStatus=='modelRunSuccess'" style="width:100%">
+                  <p class="finishFont">流域划分结果已生成</p>
+                  <div class="finishBtn">
+                    <Button type="info" ghost @click="sdDelineation">重新生成流域划分结果</Button>
+                  </div>
+                </div>
               </div>
-
           </div>
         </TabPane>
         <!-- 2、HRU划分 模拟单元 -->
@@ -169,17 +174,20 @@
             <br>
             <RadioGroup v-model="soilMapDataType" style="margin:5px 0px 5px 25px">
               <Radio label="soilMapFromSystem">
-                <span>使用系统提供的土壤属性图</span>
+                <span>使用系统提供的土壤数据</span>
               </Radio>
               <Radio label="soilMapFromLocal" style="padding-left:46px">
-                <span>使用本地上传的土壤属性图</span>
+                <span>使用本地上传的土壤数据</span>
               </Radio>
             </RadioGroup> 
             <!-- <span>使用系统提供的土壤质地图：</span> -->
             <div class="selectFlex">
               <div>
-                <Select v-model="soilMapSelect" style="width:200px" :disabled="soilMapDataType=='soilMapFromLocal'">
+                <Select clearable v-model="soilMapSelect" style="width:200px" :disabled="soilMapDataType=='soilMapFromLocal'" placeholder="请选择土壤类型数据">
                   <Option v-for="item in soilMapList" :value="item.value" :key="item.value">{{ item.label }}</Option>
+                </Select><br>
+                <Select clearable v-model="soilParaSelect" style="width:200px" :disabled="soilMapDataType=='soilMapFromLocal'" placeholder="请选择土壤属性数据">
+                  <Option v-for="item in soilParaList" :value="item.value" :key="item.value">{{ item.label }}</Option>
                 </Select>
               </div>
               <!-- <Divider type="vertical" /> -->
@@ -207,7 +215,7 @@
             <!-- <span>使用系统提供的土地利用数据：</span> -->
             <div class="selectFlex">
               <div>
-                <Select v-model="landuseMapSelect" style="width:200px" :disabled="landuseDataType=='landuseFromLocal'">
+                <Select clearable v-model="landuseMapSelect" style="width:200px" :disabled="landuseDataType=='landuseFromLocal'">
                   <Option v-for="item in landuseMapList" :value="item.value" :key="item.value">{{ item.label }}</Option>
                 </Select>
               </div>
@@ -221,7 +229,19 @@
               </div>
             </div>
             <div class="finishBtn">
-              <Button type="info" ghost>完成模拟单元划分</Button>
+              <Button v-if="simulationUnitDelineationStatus=='modelSetting'" type="info" ghost @click="sdSimulationUnit">进行模拟单元划分</Button>
+              <div v-else-if="simulationUnitDelineationStatus=='modelRunning'" style="width:85%">
+                <i-progress :percent="99.99" status="active" hide-info></i-progress>
+                <span>模拟单元划分运行中...</span>
+              </div>
+              <div v-else-if="simulationUnitDelineationStatus=='modelRunSuccess'" style="width:100%">
+                <p class="finishFont">模拟单元已划分</p>
+                <div class="finishBtn">
+                  <Button type="info" ghost @click="sdSimulationUnit">重新进行模拟单元划分</Button>
+                </div>
+              </div>
+              <!-- <Button type="info" ghost>进行模拟单元划分</Button> -->
+              <!-- <Button type="info" ghost @click="sdSimulationUnit">进行模拟单元划分</Button> -->
             </div>
           </div>
         </TabPane>
@@ -325,6 +345,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 import {request} from "@/network/request";
 import {requestGis} from "@/network/request";
 export default {
@@ -430,8 +451,8 @@ export default {
         ////////
         soilMapList:[
           {
-            value:'soil-1',
-            label:'soil-1'
+            value:'ChinaSoilType1km',
+            label:'中国土壤类型图'
           },
           {
             value:'soil-2',
@@ -440,10 +461,21 @@ export default {
         ],
         soilMapSelect:'',
         soilMapDataType:'soilMapFromSystem',
+        soilParaSelect:'',
+        soilParaList:[
+          {
+            value:'SGW_china',
+            label:'中山大学上官微土壤属性数据集'
+          },
+          {
+            value:'soilgrids',
+            label:'soilgrids土壤属性数据集'
+          }
+        ],
         landuseMapList:[
           {
-            value:'landuse-1',
-            label:'landuse-1'
+            value:'ESA_CCI_300m',
+            label:'ESA-CCI-300m'
           },
           {
             value:'landuse-2',
@@ -452,6 +484,7 @@ export default {
         ],
         landuseMapSelect:'',
         landuseDataType:'landuseFromSystem',
+        simulationUnitDelineationStatus:'modelSetting',
         ///////////////
         rainDataType:'rainFromSystem',
         rainDataList:[
@@ -505,6 +538,7 @@ export default {
                 content:'项目命名成功',
                 duration: 3
               });
+              this.$store.commit("SET_PROJECT_NAME", this.formProjectItem.projectName);
             } else {
                 this.$Message.error({
                 content:'项目命名失败，请重新命名',
@@ -894,6 +928,7 @@ export default {
             duration:10
           })
         this.subbasinDelineationStatus='modelRunSuccess';
+        // this.geoserverPublih();
         }else {
           this.$Notice.warning({
             title: '流域划分失败，请重新设置！',
@@ -907,6 +942,127 @@ export default {
             title: '流域划分失败，请重新设置！',
           });
           this.subbasinDelineationStatus='modelSetting';
+      })
+    },
+    sdSimulationUnit(){
+      var _this = this
+      _this.simulationUnitDelineationStatus='modelRunning';
+      let params = new URLSearchParams();
+      params.append("projectName",_this.formProjectItem.projectName);
+      // _this.simulationUnitParams(_this.landuseMapSelect,'simulationUnitLanduse')
+      axios.all([_this.simulationUnitParams(_this.landuseMapSelect,'simulationUnitLanduse'), 
+                  _this.simulationUnitParams(_this.soilMapSelect, 'simulationUnitSoiltype')])
+      .then(axios.spread(function(landuseResp, soilResp){
+      // .then(e=>{
+        // if (e.data.errCode == 200 ) {
+        if (landuseResp.data.errCode == 200 && soilResp.data.errCode == 200) {
+              _this.$Notice.success({
+              title: '选择模拟单元数据成功',
+              duration:10
+            })
+          _this.sdSimulationUnitSeimsApi();
+          _this.soilLookupTableSeimsApi();
+        } else {
+            _this.$Notice.warning({
+              title: '选择模拟单元数据失败,请重新选择',
+              duration:10
+            })
+            _this.simulationUnitDelineationStatus='modelSetting';
+        }
+      }));
+    },
+    simulationUnitParams(selectedData,urlType){
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      params.append("selectedData",selectedData);
+      if (urlType =='simulationUnitSoiltype') {
+        params.append("soilParaSelectedData",this.soilParaSelect);
+      }
+      var url = '/basins/preprocess/' + urlType
+      return request.post(url,params)
+    },
+    soilLookupTableSeimsApi(){
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      requestGis.post('/ws-hydro/SEIMSDataProcessing/soilLookupTable',params)
+      .then(res=>{
+        console.log(res);
+        if (res.status == 200) {
+          this.$Notice.success({
+            title:'Soil Lookup Table 已生成',
+            duration:10
+          })
+        // this.geoserverPublih();
+        }else {
+          this.$Notice.warning({
+            title: 'Soil Lookup Table 生成失败，请重新设置！',
+            desc: '失败原因： ' + res.data.msg,
+            duration:10
+          });
+          this.simulationUnitDelineationStatus='modelSetting';
+        }
+      }).catch(e => {
+          this.$Notice.error({
+            title: 'Soil Lookup Table 生成失败，请重新设置！',
+          });
+          this.simulationUnitDelineationStatus='modelSetting';
+      })
+    },
+    sdSimulationUnitSeimsApi(){
+      let params = new URLSearchParams();
+      params.append("projectName",this.formProjectItem.projectName);
+      requestGis.post('/ws-hydro/SEIMSDataProcessing/sdField',params)
+      .then(res=>{
+        // console.log(res);
+        if (res.status == 200) {
+          this.$Notice.success({
+            title:'流域划分结果已生成',
+            duration:10
+          })
+          this.simulationUnitDelineationStatus='modelRunSuccess';
+        // this.geoserverPublih();
+        }else {
+          this.$Notice.warning({
+            title: '流域划分失败，请重新设置！',
+            desc: '失败原因： ' + res.data.msg,
+            duration:10
+          });
+          this.simulationUnitDelineationStatus='modelSetting';
+        }
+      }).catch(e => {
+          this.$Notice.error({
+            title: '流域划分失败，请重新设置！',
+          });
+          this.simulationUnitDelineationStatus='modelSetting';
+      })
+    },
+    geoserverPublih(){
+      var paramObj = {
+        fileName: "D:/WEB/basins/test/test7/workspace/spatial_raster/dem.tif",
+        workSpace: this.formProjectItem.projectName,
+        styleName: "dem",
+        dataSetName: "dem",
+        layerName: "dem",
+        dataType: 2,
+        crs:4326
+      };
+      var options = {
+        headers: {
+          "content-type": "application/json"
+        },
+        method: "POST",
+        data: JSON.stringify(paramObj)
+      };
+      request('/geoserver/publish',options)
+      .then(res=>{
+        console.log(res);
+        if (res.data.errCode == 200) {
+          console.log("gerosrver publish success");
+        }else {
+          console.log("gerosrver publish failed");
+        }
+      }).catch(e => {
+          console.log("gerosrver publish failed");
       })
     },
     transformDecimal(number, i) {
@@ -1021,7 +1177,9 @@ export default {
   .finishBtn>button{
     width: 90%;
   }
-  
+  .finishFont{
+    color: #19be6b;
+  }
    /* #streamValueForm .ivu-form-item {
     margin-bottom: 5px;
   } */
